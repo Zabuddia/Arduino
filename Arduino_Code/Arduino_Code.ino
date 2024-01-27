@@ -204,7 +204,7 @@ void RobotPerception() {
 
   
   // Photodiode Sensing
-  //Serial.println(getPinVoltage(BUTTON_2)); //uncomment for debugging
+  //Serial.println(getPinVoltage(LED_3)); //uncomment for debugging
   
   /* Delete this whole line for milestone 2
   if (isButtonPushed(BUTTON_2)){
@@ -258,7 +258,7 @@ bool isButtonPushed(int button_pin) {
   //Remember that when the voltage is 0, it's only close to zero.
   //Hint: Call the getPinVoltage function and if that value is greater
   // than the BUTTON_THRESHOLD variable toward the top of the file, return true.
-  if (/*Add code to determine if the voltage on the pin is high or low*/){
+  if (getPinVoltage(button_pin) >= BUTTON_THRESHOLD){
     return true;
   } else {
     return false;
@@ -275,7 +275,7 @@ bool isCollision() {
   //In lab 6 you will add a sonar sensor to detect collision and
   // the code for the sonar sensor will go in this function.
   // Until then we will use a button to model the sensor.
-  if (/*Add code to detect if the collision button was pressed*/) {
+  if (isButtonPushed(BUTTON_3)) {
     return true;
   } else {
     return false;
@@ -318,7 +318,7 @@ void fsmCollisionDetection() {
       
       
       //State transition logic
-      if ( SensedCollision == DETECTION_NO) {
+      if (SensedCollision == DETECTION_NO) {
         collisionDetectionState = 1; //if no collision, go to no collision state
       }
       break;
@@ -330,7 +330,7 @@ void fsmCollisionDetection() {
       fsmSteerRobot(); // Milestone 2
       
       //State transition logic
-      if ( /*Add code to determine when you need to go back to state 0*/ ) {
+      if (SensedCollision == DETECTION_YES) {
         collisionDetectionState = 0; //if collision, go to collision state
       }
       break;
@@ -447,7 +447,7 @@ void RobotAction() {
                            // AND doTurnLedOn() OR ELSE YOUR LEDS WON'T WORK!!!
       break;
     case COLLISION_ON:
-      /* Add code to turn the collision LED on. This would be LED_3 */  
+      doTurnLedOn(LED_3);
       break;
   }
   
@@ -502,11 +502,11 @@ void MoveServo() {
 // Function to turn LED on
 void doTurnLedOn(int led_pin)
 {
-  /* Use knowledge from lab 1 to set the led_pin to turn the LED on */
+  digitalWrite(led_pin, HIGH);
 }
 
 // Function to turn LED off
 void doTurnLedOff(int led_pin)
 {
-  /* Use knowledge from lab 1 to set the led_pin to turn the LED off */
+  digitalWrite(led_pin, LOW);
 }
