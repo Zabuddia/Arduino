@@ -206,7 +206,7 @@ void RobotPerception() {
   // Photodiode Sensing
   //Serial.println(getPinVoltage(BUTTON_3)); //uncomment for debugging
   
-  if (isButtonPushed(BUTTON_2)){
+  if (isButtonPushed(BUTTON_2)) {
     SensedLightLeft = DETECTION_YES;
   } else {
     SensedLightLeft = DETECTION_NO;
@@ -219,7 +219,17 @@ void RobotPerception() {
   }
 
       
-  /* Add code to detect if light is up or down. Lab 2 milestone 3*/
+  if (isButtonPushed(BUTTON_1)) {
+    SensedLightUp = DETECTION_YES;
+  } else {
+    SensedLightUp = DETECTION_NO;
+  }
+
+  if (isButtonPushed(BUTTON_5)) {
+    SensedLightDown = DETECTION_YES;
+  } else {
+    SensedLightDown = DETECTION_NO;
+  }
 
   
 
@@ -312,7 +322,7 @@ void fsmCollisionDetection() {
     case 0: //collision detected
       //There is an obstacle, stop the robot
       ActionCollision = COLLISION_ON; // Sets the action to turn on the collision LED
-      /* Add code in milestone 2 to stop the robot's wheels - Hint: ActionRobotDrive = ________ */
+      ActionRobotDrive = DRIVE_STOP;
       
       
       //State transition logic
@@ -424,6 +434,43 @@ void fsmMoveServoUpAndDown() {
   //Remember no light or light in front = servo doesn't move
   //Light above = servo moves up
   //Light below = servo moves down
+
+  switch (moveServoState) {
+    case 0: //Don't change
+      ActionServoMove = SERVO_MOVE_STOP;
+      
+      if (SensedLightUp == DETECTION_YES && SensedLightDown == DETECTION_NO) {
+        moveServoState = 1;
+      } else if (SensedLightDown == DETECTION_YES && SensedLightUp == DETECTION_NO) {
+        moveServoState = 2;
+      }
+      break;
+
+     case 1: //Point up
+      ActionServoMove = SERVO_MOVE_UP;
+
+      if (SensedLightDown == DETECTION_YES) {
+        moveServoState = 0;
+      } else if (SensedLightUp == DETECTION_NO) {
+        moveServoState = 0;
+      }
+      break;
+
+     case 2: //Point down
+      ActionServoMove = SERVO_MOVE_DOWN;
+
+      if (SensedLightUp == DETECTION_YES) {
+        moveServoState = 0;
+      } else if (SensedLightDown == DETECTION_NO) {
+        moveServoState = 0;
+      }
+      break;
+
+     default:
+     {
+       ActionServoMove = SERVO_MOVE_STOP;      
+     }
+  }
   
 }
 
@@ -494,13 +541,16 @@ void MoveServo() {
   /* Add CurrentServoAngle in lab 6 */
   switch(ActionServoMove) {
     case SERVO_MOVE_STOP:
-      /* Add code in milestone 3 */
+      doTurnLedOff(LED_1);
+      doTurnLedOff(LED_5);
       break;
     case SERVO_MOVE_UP:
-      /* Add code in milestone 3 */
+      doTurnLedOn(LED_5);
+      doTurnLedOff(LED_1);
       break;
     case SERVO_MOVE_DOWN:
-      /* Add code in milestone 3 */
+      doTurnLedOn(LED_1);
+      doTurnLedOff(LED_5);
       break;
   }
 }
