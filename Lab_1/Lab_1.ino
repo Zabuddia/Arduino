@@ -1,4 +1,4 @@
-#define LEDPIN 4
+#define LEDPIN 2
 void setup()
 {
   pinMode(LEDPIN, OUTPUT);
