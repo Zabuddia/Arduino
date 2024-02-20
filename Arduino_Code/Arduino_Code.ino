@@ -402,7 +402,7 @@ void fsmSteerRobot() {
         ActionRobotDrive = DRIVE_STRAIGHT;
 
         //State transition logic
-        if ((SensedLightLeft == DETECTION_NO) && (SensedLightRight == DETECTION_NO)) {
+        if (SensedLightLeft == DETECTION_NO && SensedLightRight == DETECTION_NO) {
           steerRobotState = 0; //if light is neither left or right, go back to stop state
         } else if (SensedLightLeft == DETECTION_NO) {
           steerRobotState = 2; //if light is only on right, then go right
@@ -439,9 +439,11 @@ void fsmMoveServoUpAndDown() {
     case 0: //Don't change
       ActionServoMove = SERVO_MOVE_STOP;
       
-      if (SensedLightUp == DETECTION_YES && SensedLightDown == DETECTION_NO) {
+      if (SensedLightUp == DETECTION_YES && SensedLightDown == DETECTION_YES) {
+        moveServoState = 0;
+      } else if (SensedLightUp == DETECTION_YES) {
         moveServoState = 1;
-      } else if (SensedLightDown == DETECTION_YES && SensedLightUp == DETECTION_NO) {
+      } else if (SensedLightDown == DETECTION_YES) {
         moveServoState = 2;
       }
       break;
