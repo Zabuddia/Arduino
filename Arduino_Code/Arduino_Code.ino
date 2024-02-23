@@ -40,15 +40,13 @@ your sensors and servos. */
 
 // LED pins (note that digital pins do not need "D" in front of them)
 #define LED_1   6       // Far Left LED - Servo Up
-#define H_BRIDGE_ENA   5       // Left Middle LED  - Left Motor
 #define LED_3   4       // Middle LED - Collision
-#define H_BRIDGE_ENB   3       // Right Middle LED - Right Motor
 #define LED_5   2       // Far Right LED - Servo Down
-
 
 // Motor enable pins - Lab 3
 // These will replace LEDs 2 and 4
-
+#define H_BRIDGE_ENA   5       / /Left Motor
+#define H_BRIDGE_ENB   3       // Right Motor
 // Photodiode pins - Lab 5
 // These will replace buttons 1, 2, 4, 5
 
