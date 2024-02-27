@@ -37,15 +37,19 @@ your sensors and servos. */
 #define BUTTON_3  A4     // Middle Button - Collision
 #define BUTTON_4  A5     // Right middle button - Right Motor
 #define BUTTON_5  A6     // Far right button - Servo Down
+#define BATTERY_MONITOR A7
 
 // LED pins (note that digital pins do not need "D" in front of them)
 #define LED_1   6       // Far Left LED - Servo Up
 #define LED_3   4       // Middle LED - Collision
 #define LED_5   2       // Far Right LED - Servo Down
+#define LED_7   7
+#define LED_8   8
+#define LED_9   9
 
 // Motor enable pins - Lab 3
 // These will replace LEDs 2 and 4
-#define H_BRIDGE_ENA   5       / /Left Motor
+#define H_BRIDGE_ENA   5       //Left Motor
 #define H_BRIDGE_ENB   3       // Right Motor
 // Photodiode pins - Lab 5
 // These will replace buttons 1, 2, 4, 5
@@ -62,6 +66,9 @@ your sensors and servos. */
 /***********************************************************/
 // Configuration parameter definitions
 // Replace the parameters with those that are appropriate for your robot
+
+// Full voltage for battery monitor
+#define FULL_VOLTAGE 4.143
 
 // Voltage at which a button is considered to be pressed
 #define BUTTON_THRESHOLD 2.5
@@ -100,6 +107,12 @@ your sensors and servos. */
 #define DRIVE_RIGHT     2
 #define DRIVE_STRAIGHT  3
 
+// Battery monitor definitions
+#define REPLACE_BATTERY 0
+#define LOW_CHARGE 1
+#define MEDIUM_CHARGE 2
+#define FULL_CHARGE 3
+
 // Servo movement definitions
 #define SERVO_MOVE_STOP 0
 #define SERVO_MOVE_UP   1
@@ -130,6 +143,10 @@ int ActionCollision = COLLISION_OFF;
 
 // Main motors Action (using Definitions)
 int ActionRobotDrive = DRIVE_STOP;
+
+// Battery monitor
+int ActionBatteryMonitor = REPLACE_BATTERY;
+
 // Add speed action in Lab 4
 
 // Servo Action (using Definitions)
@@ -305,6 +322,7 @@ void RobotPlanning(void) {
   // based on the sensing from the Perception stage.
   fsmCollisionDetection(); // Milestone 1
   fsmMoveServoUpAndDown(); // Milestone 3
+  fsmBatteryMonitor();
   // Add Speed Control State Machine in lab 4
 }
 
@@ -419,6 +437,62 @@ void fsmSteerRobot() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// State machine for battery monitor
+////////////////////////////////////////////////////////////////////
+
+void fsmBatteryMonitor() {
+  static int batteryMonitorState = 0;
+
+  switch (batteryMonitorState) {
+    case 0:
+      ActionBatteryMonitor = REPLACE_BATTERY;
+
+      if (getPinVoltage(BATTERY_MONITOR) > (0.7 * FULL_VOLTAGE)) {
+        batteryMonitorState = 1;
+      }
+      
+      break;
+      
+    case 1:
+      ActionBatteryMonitor = LOW_CHARGE;
+
+      if (getPinVoltage(BATTERY_MONITOR) < (0.7 * FULL_VOLTAGE)) {
+        batteryMonitorState = 0;
+      } else if (getPinVoltage(BATTERY_MONITOR) > (0.8 * FULL_VOLTAGE)) {
+        batteryMonitorState = 2;
+      }
+      
+      break;
+
+    case 2:
+      ActionBatteryMonitor = MEDIUM_CHARGE;
+
+      if (getPinVoltage(BATTERY_MONITOR) < (0.8 * FULL_VOLTAGE)) {
+        batteryMonitorState = 1;
+      } else if (getPinVoltage(BATTERY_MONITOR) > (0.9 * FULL_VOLTAGE)) {
+        batteryMonitorState = 3;
+      }
+      
+      break;
+
+    case 3:
+      ActionBatteryMonitor = FULL_CHARGE;
+
+      if (getPinVoltage(BATTERY_MONITOR) < (0.9 * FULL_VOLTAGE)) {
+        batteryMonitorState = 2;
+      }
+      
+      break;
+
+    default:
+    {
+      batteryMonitorState = 0;
+      ActionBatteryMonitor = REPLACE_BATTERY;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////
 // State machine for detecting if light is above or below center,
 // and moving the servo accordingly.
 ////////////////////////////////////////////////////////////////////
@@ -524,6 +598,30 @@ void RobotAction() {
     case DRIVE_STRAIGHT:
       doTurnLedOn(H_BRIDGE_ENB);
       doTurnLedOn(H_BRIDGE_ENA);
+      break;
+  }
+
+  // This is for the battery monitor
+  switch(ActionBatteryMonitor) {
+    case FULL_CHARGE:
+      doTurnLedOn(LED_7);
+      doTurnLedOn(LED_8);
+      doTurnLedOn(LED_9);
+      break;
+    case MEDIUM_CHARGE:
+      doTurnLedOff(LED_7);
+      doTurnLedOn(LED_8);
+      doTurnLedOn(LED_9);
+      break;
+    case LOW_CHARGE:
+      doTurnLedOff(LED_7);
+      doTurnLedOff(LED_8);
+      doTurnLedOn(LED_9);
+      break;
+    case REPLACE_BATTERY:
+      doTurnLedOff(LED_7);
+      doTurnLedOff(LED_8);
+      doTurnLedOff(LED_9);
       break;
   }
   
