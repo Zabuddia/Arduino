@@ -20,7 +20,8 @@ void loop() // main loop
 // function to compute tau
 float computeTau(float measuredTime, float beta)
 {
-  float tau = // this is where you compute tau
+  float tempBeta = (1 - beta) / beta;
+  float tau = measuredTime / logf(tempBeta); // this is where you compute tau
   return(tau);
 }
 
