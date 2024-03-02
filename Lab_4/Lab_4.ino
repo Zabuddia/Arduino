@@ -1,7 +1,7 @@
 #include "math.h"  // need this for log()
 
 //Note the filter is the Resistor and Capacitor
-#define FILTER_IN_PIN 7
+#define FILTER_IN_PIN 8
 #define FILTER_OUT_PIN A0
 
 void setup() // setup function
