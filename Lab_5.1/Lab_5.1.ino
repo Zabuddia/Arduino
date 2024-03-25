@@ -1,4 +1,5 @@
 #define PHOTODIODE_LIGHT_THRESHOLD 3
+#define PIN A2
 
 float getPinVoltage(int pin) {
   return 5 * (float)analogRead(pin) / 1024;
@@ -13,11 +14,11 @@ bool isLight(int pin) {
 void setup() {
   Serial.begin(9600);
   pinMode(6, OUTPUT);
-  pinMode(A1, INPUT);
+  pinMode(PIN, INPUT);
 }
 
 void loop() {
-  if (isLight(A1)) {
+  if (isLight(PIN)) {
     digitalWrite(6, HIGH);
   } else {
     digitalWrite(6, LOW);
