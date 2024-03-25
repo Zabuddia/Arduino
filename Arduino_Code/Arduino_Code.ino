@@ -36,9 +36,9 @@ your sensors and servos. */
 
 // Button pins. These will be replaced with the photodiode variables in lab 5
 #define BUTTON_1  A2     // Far left Button - Servo Up
-#define BUTTON_2  A3     // Left middle button - Left Motor
+#define BUTTON_4  A3     // Left middle button - Left Motor
 #define BUTTON_3  A4     // Middle Button - Collision
-#define BUTTON_4  A5     // Right middle button - Right Motor
+#define BUTTON_2  A5     // Right middle button - Right Motor
 #define BUTTON_5  A6     // Far right button - Servo Down
 
 // LED pins (note that digital pins do not need "D" in front of them)
