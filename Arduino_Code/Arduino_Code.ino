@@ -57,6 +57,10 @@ your sensors and servos. */
 // These will replace LEDs 2 and 4
 
 // Photodiode pins - Lab 5
+#define LEFT_DIODE A3
+#define RIGHT_DIODE A5
+#define UP_DIODE A2
+#define DOWN_DIODE A6
 // These will replace buttons 1, 2, 4, 5
 
 // Capacitive sensor pins - Lab 4
@@ -187,11 +191,11 @@ void setup() {
   pinMode(LED_5, OUTPUT);
  
   //Set up input pins
-  pinMode(BUTTON_1, INPUT);
-  pinMode(BUTTON_2, INPUT);
+  pinMode(UP_DIODE, INPUT);
+  pinMode(RIGHT_DIODE, INPUT);
   pinMode(BUTTON_3, INPUT);
-  pinMode(BUTTON_4, INPUT);
-  pinMode(BUTTON_5, INPUT);
+  pinMode(LEFT_DIODE, INPUT);
+  pinMode(DOWN_DIODE, INPUT);
   pinMode(CAP_SENSOR_RECEIVE, INPUT);
   pinMode(CAP_SENSOR_SEND, OUTPUT);  
 
@@ -243,23 +247,23 @@ void RobotPerception() {
   // Photodiode Sensing
   //Serial.println(getPinVoltage(BUTTON_3)); //uncomment for debugging
  
-  if (isLight(BUTTON_2)) {
+  if (isLight(RIGHT_DIODE)) {
     SensedLightLeft = DETECTION_YES;
   } else {
     SensedLightLeft = DETECTION_NO;
   }
   // Remember, you can find the buttons and which one goes to what towards the top of the file
-  if (isLight(BUTTON_4)) {
+  if (isLight(LEFT_DIODE)) {
     SensedLightRight = DETECTION_YES;
   } else {
     SensedLightRight = DETECTION_NO;
   }
-  if (isLight(BUTTON_1)) {
+  if (isLight(UP_DIODE)) {
     SensedLightUp = DETECTION_YES;
   } else {
     SensedLightUp = DETECTION_NO;
   }
-  if (isLight(BUTTON_5)) {
+  if (isLight(DOWN_DIODE)) {
     SensedLightDown = DETECTION_YES;
   } else {
     SensedLightDown = DETECTION_NO;
