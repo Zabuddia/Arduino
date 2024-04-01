@@ -22,8 +22,8 @@
 your sensors and servos. */
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
-
-
+#include <NewPing.h>
+#include <Servo.h>
 
 //
 // Compiler defines: the compiler replaces each name with its assignment
@@ -47,9 +47,9 @@ your sensors and servos. */
 #define LED_3   4       // Middle LED - Collision
 #define H_BRIDGE_ENB   3       // Right Middle LED - Right Motor
 #define LED_5   2       // Far Right LED - Servo Down
-#define LED_7 7
-#define LED_8 8
-#define LED_9 9
+//#define LED_7 7
+//#define LED_8 8
+//#define LED_9 9/
 #define FULL 4.137
 
 
@@ -72,12 +72,17 @@ your sensors and servos. */
 
 #define CAP_SENSOR_TAU_THRESHOLD 25
 
-
 // Ultrasonic sensor pin - Lab 6
 // This will replace button 3 and LED 3 will no longer be needed
 
+#define TRIGGER_PIN 12 // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN 10 // Arduino pin tied to echo pin on the ultrasonic sensor.
+
 // Servo pin - Lab 6
 // This will replace LEDs 1 and 5
+#define SERVO_PIN 9
+#define SERVO_UP_PIN 6
+#define SERVO_DOWN_PIN 2
 
 /***********************************************************/
 // Configuration parameter definitions
@@ -96,14 +101,18 @@ your sensors and servos. */
 
 
 // Parameters for servo control as well as instantiation - Lab 6
-
+#define SERVO_START_ANGLE 90
+#define SERVO_UP_LIMIT 135
+#define SERVO_DOWN_LIMIT 45
+static Servo myServo;
 
 // Parameters for ultrasonic sensor and instantiation - Lab 6
+#define MAX_DISTANCE 200
 
+static NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 // Parameter to define when the ultrasonic sensor detects a collision - Lab 6
-
-
+#define DETECT_COLLISION 10
 
 /***********************************************************/
 // Defintions that allow one to set states
@@ -193,13 +202,17 @@ void setup() {
   //Set up input pins
   pinMode(UP_DIODE, INPUT);
   pinMode(RIGHT_DIODE, INPUT);
-  pinMode(BUTTON_3, INPUT);
   pinMode(LEFT_DIODE, INPUT);
   pinMode(DOWN_DIODE, INPUT);
   pinMode(CAP_SENSOR_RECEIVE, INPUT);
   pinMode(CAP_SENSOR_SEND, OUTPUT);  
 
+  pinMode(TRIGGER_PIN, OUTPUT); // pulse sent out through TRIGGER_PIN    
+  pinMode(ECHO_PIN, INPUT); // return signal read through ECHO_PIN
+  
   //Set up servo - Lab 6
+  myServo.attach(SERVO_PIN);
+  myServo.write(SERVO_START_ANGLE);
 
 }
 
@@ -329,11 +342,14 @@ bool isCollision() {
   //In lab 6 you will add a sonar sensor to detect collision and
   // the code for the sonar sensor will go in this function.
   // Until then we will use a button to model the sensor.
-  if (isButtonPushed(BUTTON_3)) {
-    return true;
+  int sonar_distance = sonar.ping_cm(); // If the distance is too big, it returns 0.
+  //Serial.println(sonar_distance);
+  if(sonar_distance != 0){ 
+    return (sonar_distance < DETECT_COLLISION);
   } else {
-    return false;
+  return false;
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -536,7 +552,7 @@ void fsmMoveServoUpAndDown() {
     case 1: // Light above
       // Light is above, move servo up
       ActionServoMove = SERVO_MOVE_UP;
-
+      
       // State transition logic
       if (SensedLightUp == DETECTION_NO) {
         moveServoState = 0; // If no light above, go back to stop state
@@ -655,33 +671,33 @@ void RobotAction() {
       analogWrite(H_BRIDGE_ENB, 0);
       break;
   }
-
-  switch(ActionBatteryMonitor){
-    case FULL_CHARGE:
-      doTurnLedOn(LED_7);
-      doTurnLedOn(LED_8);
-      doTurnLedOn(LED_9);
-      break;
-   
-
-    case MEDIUM_CHARGE:
-      doTurnLedOff(LED_7);
-      doTurnLedOn(LED_8);
-      doTurnLedOn(LED_9);
-      break;
-
-    case LOW_CHARGE:
-      doTurnLedOff(LED_7);
-      doTurnLedOff(LED_8);
-      doTurnLedOn(LED_9);
-      break;
-
-    case REPLACE_BATTERY:
-      doTurnLedOff(LED_7);
-      doTurnLedOff(LED_8);
-      doTurnLedOff(LED_9);
-      break;
-    }
+//
+//  switch(ActionBatteryMonitor){
+//    case FULL_CHARGE:
+//      doTurnLedOn(LED_7);
+//      doTurnLedOn(LED_8);
+//      doTurnLedOn(LED_9);
+//      break;
+//   
+//
+//    case MEDIUM_CHARGE:
+//      doTurnLedOff(LED_7);
+//      doTurnLedOn(LED_8);
+//      doTurnLedOn(LED_9);
+//      break;
+//
+//    case LOW_CHARGE:
+//      doTurnLedOff(LED_7);
+//      doTurnLedOff(LED_8);
+//      doTurnLedOn(LED_9);
+//      break;
+//
+//    case REPLACE_BATTERY:
+//      doTurnLedOff(LED_7);
+//      doTurnLedOff(LED_8);
+//      doTurnLedOff(LED_9);
+//      break;
+//    }
     // This calls a function to move the servo
     MoveServo();      
 }
@@ -689,17 +705,30 @@ void RobotAction() {
 void MoveServo() {
   // Note that there needs to be some logic in the action of moving
   // the servo so that it does not exceed its range
-  /* Add CurrentServoAngle in lab 6 */
+  static int CurrentServoAngle = SERVO_START_ANGLE;
+  Serial.println(CurrentServoAngle);
   switch(ActionServoMove) {
     case SERVO_MOVE_STOP:
      doTurnLedOff(LED_1);
      doTurnLedOff(LED_5);
-      break;
+     break;
     case SERVO_MOVE_UP:
       doTurnLedOn(LED_1);
+      if (CurrentServoAngle >= SERVO_UP_LIMIT) {
+        ActionServoMove = SERVO_MOVE_DOWN;
+        break;
+      }
+      CurrentServoAngle += 1;
+      myServo.write(CurrentServoAngle);
       break;
     case SERVO_MOVE_DOWN:
       doTurnLedOn(LED_5);
+      if (CurrentServoAngle <= SERVO_DOWN_LIMIT) {
+        ActionServoMove = SERVO_MOVE_UP;
+        break;
+      }
+      CurrentServoAngle -= 1;
+      myServo.write(CurrentServoAngle);
       break;
   }
 }
