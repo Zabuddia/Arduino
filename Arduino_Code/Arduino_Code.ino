@@ -1,29 +1,10 @@
-/********************************************************************
-  ECEN 240/301 Lab Code
-  Light-Following Robot
-
-  The approach of this code is to use an architectured that employs
-  three different processes:
-    Perception
-    Planning
-    Action
-
-  By separating these processes, this allows one to focus on the
-  individual elements needed to do these tasks that are general
-  to most robotics.
-
-
-  Version History
-  1.1.3       11 January 2023   Creation by Dr. Mazzeo and TAs from 2022 version
-
- ********************************************************************/
-
 /* These initial includes allow you to use necessary libraries for
 your sensors and servos. */
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
 #include <NewPing.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
 
 //
 // Compiler defines: the compiler replaces each name with its assignment
@@ -114,6 +95,8 @@ static NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 // Parameter to define when the ultrasonic sensor detects a collision - Lab 6
 #define DETECT_COLLISION 10
 
+SoftwareSerial BTSerial(0, 1);
+
 /***********************************************************/
 // Defintions that allow one to set states
 // Sensor state definitions
@@ -150,8 +133,6 @@ static NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 #define SPEED_LOW       (int) (255 * 0.45)
 #define SPEED_MED       (int) (255 * 0.75)
 #define SPEED_HIGH      (int) (255 * 1)
-
-
 
 
 /***********************************************************/
@@ -191,6 +172,7 @@ int ActionBatteryMonitor = REPLACE_BATTERY;
 void setup() {
   //Set up serial connection at 9600 Baud
   Serial.begin(9600);
+  BTSerial.begin(38400);
  
   //Set up output pins
   pinMode(LED_1, OUTPUT);
@@ -260,13 +242,13 @@ void RobotPerception() {
   // Photodiode Sensing
   //Serial.println(getPinVoltage(BUTTON_3)); //uncomment for debugging
  
-  if (isLight(RIGHT_DIODE)) {
+  if (readBluetooth() == '1') {
     SensedLightLeft = DETECTION_YES;
   } else {
     SensedLightLeft = DETECTION_NO;
   }
   // Remember, you can find the buttons and which one goes to what towards the top of the file
-  if (isLight(LEFT_DIODE)) {
+  if (readBluetooth() == '2') {
     SensedLightRight = DETECTION_YES;
   } else {
     SensedLightRight = DETECTION_NO;
@@ -281,9 +263,6 @@ void RobotPerception() {
   } else {
     SensedLightDown = DETECTION_NO;
   }
-
-
- 
 
    // Capacitive Sensor
    if (isCapacitiveSensorTouched) {
@@ -326,6 +305,15 @@ bool isButtonPushed(int button_pin) {
   } else {
     return false;
   }
+}
+
+char readBluetooth() {
+  if (BTSerial.available()) {
+    char input = BTSerial.read();
+    Serial.println(input);
+    return input;
+  }
+  
 }
 
 bool isLight(int pin){
