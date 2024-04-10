@@ -47,10 +47,12 @@ int RightButtonPushed = 0;
 int UpButtonPushed = 0;
 int DownButtonPushed = 0;
 
+int ChangeSpeed = 0;
+
 SoftwareSerial BTSerial(0, 1); // RX | TX
 
 void setup() {
-  Serial.begin(38400);
+  Serial.begin(9600);
   BTSerial.begin(38400); // HC-05 default speed in AT command more
 
   pinMode(H_BRIDGE_ENA, OUTPUT);
@@ -78,22 +80,29 @@ void RobotPerception() {
     switch (c) {
       case '1':
         UpButtonPushed = 1;
+        ChangeSpeed = 0;
         break;
       case '2':
         RightButtonPushed = 1;
+        ChangeSpeed = 0;
         break;
       case '3':
         DownButtonPushed = 1;
+        ChangeSpeed = 0;
         break;
       case '4':
         LeftButtonPushed = 1;
+        ChangeSpeed = 0;
         break;
       case '0':
         UpButtonPushed = 0;
         RightButtonPushed = 0;
         DownButtonPushed = 0;
         LeftButtonPushed = 0;
+        ChangeSpeed = 0;
         break;
+      case '5':
+        ChangeSpeed = 1;
       default:
         // Optional: Handle any other characters or do nothing
         break;
@@ -119,6 +128,7 @@ bool isCollision() {
 
 void RobotPlanning(void) {
   fsmCollisionDetection();
+  fsmSpeedControl();
 }
 
 void fsmCollisionDetection() {
@@ -129,21 +139,17 @@ void fsmCollisionDetection() {
       ActionCollision = COLLISION_ON;
       ActionRobotDrive = DRIVE_STOP;
       fsmSteerRobot(1);
-     
       if (SensedCollision == 0) {
         collisionDetectionState = 1;
       }
       break;
-   
     case 1:
       ActionCollision = COLLISION_OFF;
       fsmSteerRobot(0);
-     
       if (SensedCollision == 1) {
         collisionDetectionState = 0;
       }
       break;
-
     default:
       {
         collisionDetectionState = 0;
@@ -157,7 +163,6 @@ void fsmSteerRobot(int collision) {
   switch (steerRobotState) {
     case 0:
       ActionRobotDrive = DRIVE_STOP;
-
       if (collision == 1) {
         if (LeftButtonPushed == 1) {
           steerRobotState = 0;
@@ -179,30 +184,21 @@ void fsmSteerRobot(int collision) {
           steerRobotState = 4;
         }
       }
-      
       break;
-   
     case 1:
       ActionRobotDrive = DRIVE_LEFT;
-     
       if (LeftButtonPushed == 0) {
         steerRobotState = 0;
       }
-     
       break;
-   
     case 2:
       ActionRobotDrive = DRIVE_RIGHT;
-     
       if (RightButtonPushed == 0) {
         steerRobotState = 0;
       }
-
       break;
-
     case 3:
       ActionRobotDrive = DRIVE_STRAIGHT;
-
       if (UpButtonPushed == 0) {
         steerRobotState = 0;
       } else if (RightButtonPushed == 1) {
@@ -210,22 +206,38 @@ void fsmSteerRobot(int collision) {
       } else if (LeftButtonPushed == 1) {
         steerRobotState = 1;
       }
-
       break;
-
     case 4:
       ActionRobotDrive = DRIVE_BACKWARD;
-
       if (DownButtonPushed == 0) {
         steerRobotState = 0;
       }
-
       break;
-     
-    default: // error handling
+    default:
     {
       steerRobotState = 0;
     }
+  }
+}
+
+void fsmSpeedControl() {
+  static int toggleSpeedState = 0;
+
+  switch (toggleSpeedState) {
+    case 0:
+      if (ChangeSpeed) {
+        toggleSpeedState = 1;
+      }
+      break;
+    case 1:
+      if (!ChangeSpeed) {
+        toggleSpeedState = 2;
+      }
+      break;
+    case 2:
+      fsmChangeSpeed();
+      toggleSpeedState = 0;
+      break;
   }
 }
 
@@ -233,19 +245,19 @@ void fsmChangeSpeed() {
   static int changeSpeedState = 0;
  
   switch (changeSpeedState){
-    case 0: //Speed off
+    case 0:
       ActionRobotSpeed = SPEED_STOP;
       changeSpeedState = 1;
       break;
-    case 1: //Speed low
+    case 1:
       ActionRobotSpeed = SPEED_LOW;
       changeSpeedState = 2;
       break;
-    case 2: //Speed med
+    case 2:
       ActionRobotSpeed = SPEED_MED;
       changeSpeedState = 3;
       break;
-    case 3: //speed high
+    case 3:
       ActionRobotSpeed = SPEED_HIGH;
       changeSpeedState = 0;
       break;
